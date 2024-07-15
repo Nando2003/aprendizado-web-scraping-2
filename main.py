@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait, Select
+from selenium.webdriver.support.ui import WebDriverWait
 import pyautogui
 from time import sleep
 from dotenv import load_dotenv
@@ -24,6 +24,10 @@ class RPA_2:
     def _process(self) -> None:
         self.open_browser() # Abre o navegador e entra na página da URL
         self.login_in_url() # Faz o login com email e senha
+        self.click_in_TRComputerPluginWindows() # Clica em abrir
+        self.click_in_Escrita_Fiscal() # Clica em Escrita Fiscal
+        
+        sleep(10)
 
     def mouse_to_center(self) -> None:
         screen_width, screen_height = pyautogui.size()
@@ -80,18 +84,52 @@ class RPA_2:
         
         entrar.click()
         
-        sleep(5) # Para o dev visualizar
+        # sleep(5) # Para o dev visualizar
 
     def click_in_TRComputerPluginWindows(self) -> None:
-        self.mouse_to_center() # Move o mouse para o centro da tela
-        
-        pyautogui.locateAllOnScreen("./refer_images/TRComputerPluginWindows.png")
-        pyautogui.click()
+        try:
+            self.mouse_to_center() # Move o mouse para o centro da tela
+    
+            sleep(10)
+            logging.info("Procurando TRComputerPluginWindows")
+            abrir_button = pyautogui.locateCenterOnScreen(
+                "refer_images/TRComputerPluginWindows.png"
+            )
+            
+            sleep(1)
+            logging.info("TRComputerPluginWindows não achada")
+            pyautogui.moveTo(abrir_button)
+            pyautogui.click()
+            
+        except pyautogui.ImageNotFoundException:
+            logging.info("TRComputerPluginWindows não achada")
+            self.click_in_TRComputerPluginWindows()
+    
+    def click_in_Escrita_Fiscal(self) -> None:
+        try:
+            self.mouse_to_center()
+            
+            sleep(20)
+            logging.info("Procurando Escrita Fiscal")
+            escrita_button = pyautogui.locateCenterOnScreen(
+                "refer_images/EscritaFiscal.png"
+            )
+            
+            sleep(1)
+            logging.info("Escrita Fiscal achada")
+            pyautogui.moveTo(escrita_button)
+            
+            for i in range(2):
+                pyautogui.click()
+            
+        except pyautogui.ImageNotFoundException:
+            logging.info("Escrita Fiscal não achada")
+            self.click_in_Escrita_Fiscal()
     
     def __del__(self) -> None:
-        sleep(10)
         if self.driver is not None:
             self.driver.close()
+            logging.info("Processo Encerrado")
     
     def __str__(self) -> str:
         return self.username
