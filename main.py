@@ -97,12 +97,12 @@ class RPA_2:
             )
             
             sleep(1)
-            logging.info("TRComputerPluginWindows não achada")
+            logging.info("TRComputerPluginWindows achado")
             pyautogui.moveTo(abrir_button)
             pyautogui.click()
             
         except pyautogui.ImageNotFoundException:
-            logging.info("TRComputerPluginWindows não achada")
+            logging.info("TRComputerPluginWindows não achado")
             self.click_in_TRComputerPluginWindows()
     
     def click_in_Escrita_Fiscal(self) -> None:
