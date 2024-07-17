@@ -3,3 +3,4 @@ venv/
 dotenv/.env
 teste.py
 __pycache__
+screenshot
