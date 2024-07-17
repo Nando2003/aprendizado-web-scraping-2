@@ -5,7 +5,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 import pyautogui
 from time import sleep
 from dotenv import load_dotenv
-
+from datetime import date
+from calendar import monthrange
 import os
 import logging
 
@@ -13,30 +14,47 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class RPA_2:
     
-    def __init__(self, empresa_id : int, username_web : str, password_web : str, username_local : str, password_local : str) -> None:
+    def __init__(self, empresa_id:int, username_web:str, password_web:str, username_local:str, password_local:str, download_path=None) -> None:
         self.username_web = username_web
         self.password_web = password_web
         self.username_local = username_local
         self.password_local = password_local
         self.empresa_id = empresa_id
+        self.download_path = download_path        
         self.url = 'https://www.dominioweb.com.br/'
         self.driver = None
         self.wait_time = 10
         self._process()
     
     def _process(self) -> None:
+        self.new_download_path() # Caso download_path não seja None, será criado um path
         self.open_browser() # Abre o navegador e entra na página da URL
         self.login_in_url() # Faz o login com email e senha
         self.click_in_TRComputerPluginWindows() # Clica em abrir
         self.click_in_Escrita_Fiscal() # Clica em Escrita Fiscal
         self.login_in_dominio() # Insere as informações necessárias
         self.click_to_login() # Clica no botão para efetuar o login
+        self.wait_to_load() # Espera a escrita fiscal carregar
         self.click_in_Troca_de_Empresa() # Clica no icone de troca
         self.filling_the_empresa_code() # Preenche o campo com o código da empresa
         self.click_in_ativar() # Clica em ativar empresa
+        self.open_contribuicoes() # Abre EFD contribuições
+        self.typing_the_date() # Digita a data do primeiro e ultimo dia do mês passado
+        self.typing_the_download_path() # Digita o path de download
+        self.click_to_download() # Clica no botão de download
+        self.wait_to_download() # Espera o download ser realizado
         
         sleep(10)
 
+    def new_download_path(self) -> None:
+        if self.download_path is not None:
+            self.download_path = os.path.realpath(self.download_path)
+            if os.path.realpath(self.download_path) and self.download_path[0:2] == "C:":
+                self.download_path = "M:\\" + self.download_path[2::]
+                return
+        
+        self.download_path = "M:\\Mia"
+    
     def mouse_to_center(self) -> None:
         screen_width, screen_height = pyautogui.size()
         pyautogui.moveTo(screen_width/2, screen_height/2)
@@ -100,13 +118,13 @@ class RPA_2:
 
             logging.info("Procurando TRComputerPluginWindows")
             
-            sleep(3)
             abrir_button = pyautogui.locateCenterOnScreen(
-                "refer_images/TRComputerPluginWindows.png"
+                "refer_images/Browser/TRComputerPluginWindows.png"
             )
             
-            sleep(1)
             logging.info("TRComputerPluginWindows achado")
+            
+            sleep(0.1)
             pyautogui.moveTo(abrir_button)
             pyautogui.click()
             
@@ -120,12 +138,10 @@ class RPA_2:
             
             logging.info("Procurando Escrita Fiscal")
             
-            sleep(3)
             escrita_button = pyautogui.locateCenterOnScreen(
-                "refer_images/EscritaFiscal.png"
+                "refer_images/Dominio/Inicial/EscritaFiscal.png", 
             )
             
-            sleep(1)
             logging.info("Escrita Fiscal achada")
             pyautogui.moveTo(escrita_button)
             
@@ -137,12 +153,9 @@ class RPA_2:
     
     def login_in_dominio(self) -> None:
         try:
-            self.mouse_to_center()
             logging.info("Procurando janela de Login")
             
-            sleep(3)
-            pyautogui.locateCenterOnScreen("refer_images/DominioLogin.png")
-            
+            pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/DominioLogin.png")
             logging.info("Janela de Login achada")
             
             sleep(1)
@@ -164,12 +177,10 @@ class RPA_2:
     
     def click_to_login(self) -> None:
         try:
-            self.mouse_to_center()
             logging.info("Procurando OK para login")
+            ok_button = pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/DominioLoginOK.png")
             
-            sleep(3)
-            ok_button = pyautogui.locateCenterOnScreen("refer_images/DominioLoginOK.png")
-            
+            sleep(1)
             logging.info("OK para login achado")
             pyautogui.moveTo(ok_button)
             pyautogui.click()
@@ -178,14 +189,27 @@ class RPA_2:
             logging.info("OK para login não achado")
             self.click_to_login()
     
+    def wait_to_load(self) -> None:
+        try:
+            logging.info("Escrita carregando...")
+            pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/FullLoad.png")
+
+            sleep(1)
+            logging.info("Escrita carregada")
+        
+        except pyautogui.ImageNotFoundException:
+            self.wait_to_load()
+    
     def click_in_Troca_de_Empresa(self) -> None:
         try:
-            self.mouse_to_center()
+            sleep(5)
+            self.close_warning()
+            self.close_alert()
+                
             logging.info("Procurando Troca Icon de Empresa")
-            
-            sleep(3)
-            icon_button = pyautogui.locateCenterOnScreen("refer_images/TrocarEmpresaIcon.png")
-            
+            icon_button = pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/TrocarEmpresaIcon.png")
+
+            sleep(1)
             logging.info("Troca de Empresa Icon achado")
             pyautogui.moveTo(icon_button)
             pyautogui.click()
@@ -196,14 +220,11 @@ class RPA_2:
     
     def filling_the_empresa_code(self) -> None:
         try:
-            self.mouse_to_center()
             logging.info("Procurando Troca de Empresa")
+            pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/TrocarEmpresa.png")
             
-            sleep(3)
-            pyautogui.locateCenterOnScreen("refer_images/TrocarEmpresa.png")
-            
+            sleep(1)
             logging.info("Troca de Empresa achado")
-            
             pyautogui.write(str(self.empresa_id))
         
         except pyautogui.ImageNotFoundException:
@@ -212,20 +233,187 @@ class RPA_2:
     
     def click_in_ativar(self) -> None:
         try:
-            self.mouse_to_center()
             logging.info("Procurando Ativar troca de empresas")
+            ativar_button = pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/AtivarEmpresa.png")
             
-            sleep(3)
-            ativar_button = pyautogui.locateCenterOnScreen("refer_images/AtivarEmpresa.png")
-            
+            sleep(1)
             logging.info("Ativar troca de empresas achado")
             pyautogui.moveTo(ativar_button)
             pyautogui.click()
+            
+            sleep(5)
+            self.close_warning()
+            self.close_alert()
         
         except pyautogui.ImageNotFoundException:
             logging.info("Ativar troca de empresas não achado")
             self.click_in_ativar()
+    
+    def close_warning(self, i=0) -> None:
+        try:
+            while(i<=2):
+                sleep(1)
+                logging.info(f"Procurando Warning {i+1}")
+                pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/WarningEmpresa.png")
+                self.mouse_to_center()
+                
+                logging.info("Warning encontrado")
+                pyautogui.click()
+                pyautogui.press('esc')
+                
+                sleep(0.1)
+                self.close_question()
+                break
+            
+            else:
+                logging.info("Nenhum Warning encontrado")
+                
+        except pyautogui.ImageNotFoundException:
+            i = i + 1
+            self.close_warning(i)
+    
+    def close_alert(self, i=0) -> None:
+        try:
+            while(i<=1):
+                sleep(1)
+                logging.info(f"Procurando Alert {i+1}")
+                pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/AlertEmpresa.png")
+                self.mouse_to_center()
+                
+                logging.info("Alert encontrado")
+                pyautogui.click()
+                pyautogui.press('esc')
+                break
+                
+            else:
+                logging.info("Nenhum Alert encontrado")
+            
+        except pyautogui.ImageNotFoundException:
+            i = i + 1
+            self.close_alert(i)
+    
+    def close_question(self, i=0) -> None:
+        try:
+            while(i<=2):
+                sleep(1)
+                logging.info(f"Procurando Question {i+1}")
+                pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/QuestionEmpresa.png")
+                self.mouse_to_center()
+                
+                logging.info("Question encontrado")
+                no_button = pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/QuestionNo.png")
+                pyautogui.moveTo(no_button)
+                pyautogui.click()
+                break
+                
+            else:
+                logging.info("Nenhum Question encontrado")
+            
+        except pyautogui.ImageNotFoundException:
+            i = i + 1
+            self.close_question(i)
+      
+    def open_contribuicoes(self) -> None:
+        try:
+            logging.info("Procurando Relatórios")
+            relatorios_button = pyautogui.locateCenterOnScreen(
+                "refer_images/Dominio/Escritura/Empresa/Relatorios.png"
+            )
+            
+            logging.info("Relatórios achado")
+            
+            sleep(1)
+            pyautogui.moveTo(relatorios_button)
+            pyautogui.click()
+            
+            ordem = ["n", "f", "o"]
+            
+            for letra in ordem:
+                logging.info(f"Tecla {letra} pressionada")
+                pyautogui.press(letra)
+            
+        except pyautogui.ImageNotFoundException:
+            logging.info("Relatórios não achado")
+            self.open_contribuicoes()
+    
+    def typing_the_date(self) -> None:
+        today_date = date.today()
+        today_mouth = today_date.month
+        today_year = today_date.year
+                        
+        if today_mouth == 1:
+            last_mouth = 12
+            today_year = today_year - 1      
+        else:
+            last_mouth = today_mouth - 1
+                    
+        last_day = str((monthrange(today_year, last_mouth))[1])
+        last_mouth = str(last_mouth)
+        today_year = str(today_year)
 
+        if not(last_mouth in ["10", "11"]):
+            last_mouth = "0" + str(last_mouth)
+                
+        first_day_date = "01" + last_mouth + today_year
+        last_day_date = last_day + last_mouth + today_year
+        
+        sleep(1)
+        pyautogui.write(first_day_date)
+        pyautogui.press("tab")
+        
+        sleep(1)
+        pyautogui.write(last_day_date)
+    
+    def typing_the_download_path(self) -> None:
+        self.download_path = os.path.join(
+            self.download_path, 
+            f"{self.empresa_id}.txt"
+        )
+        
+        sleep(1)
+        pyautogui.press('tab', presses=2)
+        pyautogui.write(self.download_path)
+        
+    def click_to_download(self) -> None:
+        sleep(1)
+        pyautogui.press('tab', presses=2)
+        pyautogui.press('enter')
+            
+    def wait_to_download(self) -> None:
+        try:
+            pyautogui.locateCenterOnScreen(
+                    "refer_images/Dominio/Escritura/Empresa/WarningEmpresa.png"
+            )
+            
+            try:
+                pyautogui.locateCenterOnScreen(
+                    "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/DownloadComplete.png"
+            )
+                logging.info("Download concluido")
+                
+                self.mouse_to_center()
+                pyautogui.click()
+                pyautogui.press('esc')
+                
+            except pyautogui.ImageNotFoundException:
+                
+                try:
+                    pyautogui.locateCenterOnScreen(
+                    image="refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/DownloadIncomplete.png"
+                )
+                    logging.info("Download Incompleto")
+                    
+                    self.mouse_to_center()
+                    pyautogui.click()
+                    pyautogui.press('esc')
+                    
+                except pyautogui.ImageNotFoundException:
+                    self.wait_to_download()
+            
+        except pyautogui.ImageNotFoundException:
+            logging.info("Esperando Download")
+            self.wait_to_download()
+        
     def __del__(self) -> None:
         if self.driver is not None:
             self.driver.close()
@@ -241,8 +429,8 @@ if __name__ == "__main__":
     
     RPA_2(
         empresa_id=110,
-        username_web=os.environ.get("USERNAME"),
-        password_web=os.environ.get("PASSWORD"),
+        username_web=os.environ.get("USERNAME1"),
+        password_web=os.environ.get("PASSWORD1"),
         username_local=os.environ.get("USERNAME2"),
         password_local=os.environ.get("PASSWORD2")
     )
