@@ -425,6 +425,7 @@ class RPA_2:
                 self.status.append(("CONCLUIDO", "90ee90"))
                 
             except pyautogui.ImageNotFoundException:
+                
                 logging.info("Download Incompleto")
                 pyautogui.screenshot(imageFilename=f"./screenshot/{empresa_id}.png")
                     
@@ -449,8 +450,23 @@ class RPA_2:
                 self.status.append(("FALTA DE DADOS", "ffffe0"))
                 
             except pyautogui.ImageNotFoundException:
-                logging.info("Esperando Download")
-                self.wait_to_download(empresa_id)
+                try:
+                    sleep(0.1)
+                    pyautogui.locateCenterOnScreen(
+                        "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/LastMonth.png"
+                    )
+                    logging.info("Ultimo mês digitado")
+                            
+                    self.mouse_to_center()
+                    pyautogui.click()
+                    pyautogui.press('y')
+                    
+                    logging.info("Esperando Download")
+                    self.wait_to_download(empresa_id)
+                    
+                except pyautogui.ImageNotFoundException:
+                    logging.info("Esperando Download")
+                    self.wait_to_download(empresa_id)
     
     def editing_excel(self) -> None:
         if editing_xlsx(
