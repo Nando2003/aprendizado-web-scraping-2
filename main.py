@@ -9,17 +9,18 @@ from datetime import date
 from calendar import monthrange
 import os
 import logging
+from import_xlsx import import_column_from_xlsx
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class RPA_2:
     
-    def __init__(self, empresa_id:int, username_web:str, password_web:str, username_local:str, password_local:str, download_path=None) -> None:
+    def __init__(self, empresas_id:list, username_web:str, password_web:str, username_local:str, password_local:str, download_path=None) -> None:
         self.username_web = username_web
         self.password_web = password_web
         self.username_local = username_local
         self.password_local = password_local
-        self.empresa_id = empresa_id
+        self.empresas_id = empresas_id
         self.download_path = download_path        
         self.url = 'https://www.dominioweb.com.br/'
         self.driver = None
@@ -34,15 +35,18 @@ class RPA_2:
         self.click_in_Escrita_Fiscal() # Clica em Escrita Fiscal
         self.login_in_dominio() # Insere as informações necessárias
         self.click_to_login() # Clica no botão para efetuar o login
-        self.wait_to_load() # Espera a escrita fiscal carregar
-        self.click_in_Troca_de_Empresa() # Clica no icone de troca
-        self.filling_the_empresa_code() # Preenche o campo com o código da empresa
-        self.click_in_ativar() # Clica em ativar empresa
-        self.open_contribuicoes() # Abre EFD contribuições
-        self.typing_the_date() # Digita a data do primeiro e ultimo dia do mês passado
-        self.typing_the_download_path() # Digita o path de download
-        self.click_to_download() # Clica no botão de download
-        self.wait_to_download() # Espera o download ser realizado
+        
+        for empresa_id in self.empresas_id:
+            self.wait_to_load() # Espera a escrita fiscal carregar
+            self.click_in_Troca_de_Empresa() # Clica no icone de troca
+            self.filling_the_empresa_code(empresa_id=empresa_id) # Preenche o campo com o código da empresa
+            self.click_in_ativar() # Clica em ativar empresa
+            self.open_contribuicoes() # Abre EFD contribuições
+            self.typing_the_date() # Digita a data do primeiro e ultimo dia do mês passado
+            self.typing_the_download_path(empresa_id=empresa_id) # Digita o path de download
+            self.click_to_download() # Clica no botão de download
+            self.wait_to_download(empresa_id=empresa_id) # Espera o download ser realizado
+            self.close_download() # Fecha a aba de download
         
         sleep(10)
 
@@ -218,18 +222,19 @@ class RPA_2:
             logging.info("Troca de Empresa Icon não achado")
             self.click_in_Troca_de_Empresa()
     
-    def filling_the_empresa_code(self) -> None:
+    def filling_the_empresa_code(self, empresa_id) -> None:
         try:
             logging.info("Procurando Troca de Empresa")
             pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/TrocarEmpresa.png")
             
             sleep(1)
             logging.info("Troca de Empresa achado")
-            pyautogui.write(str(self.empresa_id))
+            logging.info(f"Empresa digitada: {empresa_id}")
+            pyautogui.write(str(empresa_id))
         
         except pyautogui.ImageNotFoundException:
             logging.info("Troca de Empresa não achado")
-            self.filling_the_empresa_code()
+            self.filling_the_empresa_code(empresa_id)
     
     def click_in_ativar(self) -> None:
         try:
@@ -364,14 +369,15 @@ class RPA_2:
         sleep(1)
         pyautogui.write(last_day_date)
     
-    def typing_the_download_path(self) -> None:
+    def typing_the_download_path(self, empresa_id) -> None:
         self.download_path = os.path.join(
             self.download_path, 
-            f"{self.empresa_id}.txt"
+            f"{empresa_id}.txt"
         )
         
         sleep(1)
         pyautogui.press('tab', presses=2)
+        pyautogui.press('backspace')
         pyautogui.write(self.download_path)
         
     def click_to_download(self) -> None:
@@ -379,11 +385,13 @@ class RPA_2:
         pyautogui.press('tab', presses=2)
         pyautogui.press('enter')
             
-    def wait_to_download(self) -> None:
+    def wait_to_download(self, empresa_id) -> None:
         try:
             pyautogui.locateCenterOnScreen(
                     "refer_images/Dominio/Escritura/Empresa/WarningEmpresa.png"
             )
+            
+            sleep(5)
             
             try:
                 pyautogui.locateCenterOnScreen(
@@ -396,24 +404,37 @@ class RPA_2:
                 pyautogui.press('esc')
                 
             except pyautogui.ImageNotFoundException:
+                logging.info("Download Incompleto")
+                pyautogui.screenshot(imageFilename=f"./screenshot/{empresa_id}.png")
+                
+                self.mouse_to_center()
+                pyautogui.click()
+                pyautogui.press('esc')
                 
                 try:
+                    sleep(5)
                     pyautogui.locateCenterOnScreen(
-                    image="refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/DownloadIncomplete.png"
-                )
-                    logging.info("Download Incompleto")
-                    
+                        "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/NoData.png"
+                    )
+                    logging.info("NoData")
+                        
                     self.mouse_to_center()
                     pyautogui.click()
                     pyautogui.press('esc')
-                    
+                
                 except pyautogui.ImageNotFoundException:
-                    self.wait_to_download()
-            
+                    ...
+                
         except pyautogui.ImageNotFoundException:
             logging.info("Esperando Download")
-            self.wait_to_download()
-        
+            self.wait_to_download(empresa_id)
+    
+    def close_download(self) -> None:
+        sleep(0.1)
+        pyautogui.press('tab')
+        pyautogui.press('enter')
+        logging.info("Fechando aba de download")
+    
     def __del__(self) -> None:
         if self.driver is not None:
             self.driver.close()
@@ -427,8 +448,14 @@ if __name__ == "__main__":
     dotenv_path = os.path.join(os.path.dirname(__file__), "dotenv_files/.env") 
     load_dotenv(dotenv_path)
     
+    empresas = import_column_from_xlsx(
+        excel_path='excel_files/Empresas.xlsx',
+        linha=3, 
+        coluna='B'
+    )
+    
     RPA_2(
-        empresa_id=110,
+        empresas_id=empresas,
         username_web=os.environ.get("USERNAME1"),
         password_web=os.environ.get("PASSWORD1"),
         username_local=os.environ.get("USERNAME2"),
