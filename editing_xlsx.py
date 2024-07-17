@@ -22,4 +22,3 @@ def editing_xlsx(excel_path:str, data:list, linha:int =1, coluna:str ='A') -> bo
     
     except Exception:
         return False
-    

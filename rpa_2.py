@@ -27,6 +27,7 @@ class RPA_2:
         self.password_local = password_local
         self.excel_path = excel_path
         self.empresas_id = self.list_of_empresas() 
+        self.status = []
         self.download_path = download_path        
         self.url = 'https://www.dominioweb.com.br/'
         self.driver = None
@@ -41,9 +42,9 @@ class RPA_2:
         self.click_in_Escrita_Fiscal() # Clica em Escrita Fiscal
         self.login_in_dominio() # Insere as informações necessárias
         self.click_to_login() # Clica no botão para efetuar o login
+        self.wait_to_load() # Espera a escrita fiscal carregar
         
         for empresa_id in self.empresas_id:
-            self.wait_to_load() # Espera a escrita fiscal carregar
             self.click_in_Troca_de_Empresa() # Clica no icone de troca
             self.filling_the_empresa_code(empresa_id=empresa_id) # Preenche o campo com o código da empresa
             self.click_in_ativar() # Clica em ativar empresa
@@ -51,16 +52,17 @@ class RPA_2:
             self.typing_the_date() # Digita a data do primeiro e ultimo dia do mês passado
             self.typing_the_download_path(empresa_id=empresa_id) # Digita o path de download
             self.click_to_download() # Clica no botão de download
-            status = self.wait_to_download(empresa_id=empresa_id) # Espera o download ser realizado
-            self.editing_excel(status=status) # Edita o excel com os status de cada empresa
+            self.wait_to_download(empresa_id=empresa_id) # Espera o download ser realizado
             self.close_download() # Fecha a aba de download
+        
+        self.editing_excel() # Edita o excel com os status de cada empresa
         
         sleep(10)
 
     def list_of_empresas(self) -> list:
         return import_column_from_xlsx(
             excel_path=self.excel_path,
-            linha=3, 
+            linha=2, 
             coluna='B'
         )
     
@@ -214,16 +216,16 @@ class RPA_2:
 
             sleep(1)
             logging.info("Escrita carregada")
+            
+            sleep(5)
+            self.close_warning()
+            self.close_alert()
         
         except pyautogui.ImageNotFoundException:
             self.wait_to_load()
     
     def click_in_Troca_de_Empresa(self) -> None:
-        try:
-            sleep(5)
-            self.close_warning()
-            self.close_alert()
-                
+        try:    
             logging.info("Procurando Troca Icon de Empresa")
             icon_button = pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/TrocarEmpresaIcon.png")
 
@@ -364,7 +366,8 @@ class RPA_2:
             last_mouth = 12
             today_year = today_year - 1      
         else:
-            last_mouth = today_mouth - 1
+            # last_mouth = today_mouth - 1 # Correto
+            last_mouth = today_mouth - 2 # Teste
                     
         last_day = str((monthrange(today_year, last_mouth))[1])
         last_mouth = str(last_mouth)
@@ -376,12 +379,12 @@ class RPA_2:
         first_day_date = "01" + last_mouth + today_year
         last_day_date = last_day + last_mouth + today_year
         
-        sleep(1)
+        sleep(0.5)
         pyautogui.press("backspace")
         pyautogui.write(first_day_date)
         pyautogui.press("tab")
         
-        sleep(1)
+        sleep(0.5)
         pyautogui.press("backspace")
         pyautogui.write(last_day_date)
     
@@ -391,25 +394,23 @@ class RPA_2:
             f"{empresa_id}.txt"
         )
         
-        sleep(1)
+        sleep(0.1)
         pyautogui.press('tab', presses=2)
         pyautogui.press('backspace')
         pyautogui.write(complete_download_path)
         
     def click_to_download(self) -> None:
-        sleep(1)
+        sleep(0.1)
         pyautogui.press('tab', presses=2)
         pyautogui.press('enter')
             
-    def wait_to_download(self, empresa_id) -> list:
-        status = []
-        
+    def wait_to_download(self, empresa_id) -> None:
         try:
             pyautogui.locateCenterOnScreen(
                     "refer_images/Dominio/Escritura/Empresa/WarningEmpresa.png"
             )
             
-            sleep(5)
+            sleep(0.5)
             
             try:
                 pyautogui.locateCenterOnScreen(
@@ -421,42 +422,40 @@ class RPA_2:
                 pyautogui.click()
                 pyautogui.press('esc')
                 
-                status.append(tuple("CONCLUIDO", "90ee90"))
+                self.status.append(("CONCLUIDO", "90ee90"))
                 
             except pyautogui.ImageNotFoundException:
                 logging.info("Download Incompleto")
                 pyautogui.screenshot(imageFilename=f"./screenshot/{empresa_id}.png")
-                
+                    
                 self.mouse_to_center()
                 pyautogui.click()
                 pyautogui.press('esc')
-                
-                status.append(tuple("FALHA", "ff6961"))
-                
-                try:
-                    sleep(5)
-                    pyautogui.locateCenterOnScreen(
-                        "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/NoData.png"
-                    )
-                    logging.info("NoData")
-                        
-                    self.mouse_to_center()
-                    pyautogui.click()
-                    pyautogui.press('esc')
-                
-                except pyautogui.ImageNotFoundException:
-                    ...
-                
+                    
+                self.status.append(("FALHA", "ff6961"))
+                    
         except pyautogui.ImageNotFoundException:
-            logging.info("Esperando Download")
-            self.wait_to_download(empresa_id)
-
-        return status
+            try:
+                sleep(0.1)
+                pyautogui.locateCenterOnScreen(
+                    "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/NoData.png"
+                )
+                logging.info("Dados não digitados")
+                        
+                self.mouse_to_center()
+                pyautogui.click()
+                pyautogui.press('esc')
+                    
+                self.status.append(("FALTA DE DADOS", "ffffe0"))
+                
+            except pyautogui.ImageNotFoundException:
+                logging.info("Esperando Download")
+                self.wait_to_download(empresa_id)
     
-    def editing_excel(self, status:list) -> None:
+    def editing_excel(self) -> None:
         if editing_xlsx(
           excel_path=self.excel_path,
-          data=status,
+          data=self.status,
           linha=3,
           coluna='C'
         ):
