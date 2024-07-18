@@ -26,15 +26,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class RPA_2:
     
-    def __init__(self, excel_path:list, username_web:str, password_web:str, username_local:str, password_local:str, download_path:str=None) -> None:
+    def __init__(self, excel_path:str, username_web:str, password_web:str, username_local:str, password_local:str, download_path:str=None) -> None:
         self.username_web = username_web
         self.password_web = password_web
         self.username_local = username_local
         self.password_local = password_local
         self.excel_path = excel_path
         self.empresas_id = self.list_of_empresas() 
-        self.status = []
-        self.download_path = download_path        
+        # self.empresas_id = [413, 346]
+        self.download_path = download_path
+        self.status = []     
         self.url = 'https://www.dominioweb.com.br/'
         self.driver = None
         self.wait_time = 10
@@ -44,14 +45,14 @@ class RPA_2:
         self.new_download_path() # Caso download_path não seja None, será criado um path
         self.open_browser() # Abre o navegador e entra na página da URL
         self.login_in_url() # Faz o login com email e senha
-        self.click_in_TRComputerPluginWindows() # Clica em abrir
-        self.click_in_Escrita_Fiscal() # Clica em Escrita Fiscal
+        self.open_dominio() # Clica em abrir
+        self.click_in_escrita_fiscal() # Clica em Escrita Fiscal
         self.login_in_dominio() # Insere as informações necessárias
         self.click_to_login() # Clica no botão para efetuar o login
         self.wait_to_load() # Espera a escrita fiscal carregar
         
         for empresa_id in self.empresas_id:
-            self.click_in_Troca_de_Empresa() # Clica no icone de troca
+            self.click_in_troca_de_empresa() # Clica no icone de troca
             self.filling_the_empresa_code(empresa_id=empresa_id) # Preenche o campo com o código da empresa
             self.click_in_ativar() # Clica em ativar empresa
             self.open_contribuicoes() # Abre EFD contribuições
@@ -138,7 +139,7 @@ class RPA_2:
         
         # sleep(5) # Para o dev visualizar
 
-    def click_in_TRComputerPluginWindows(self) -> None:
+    def open_dominio(self) -> None:
         try:
             self.mouse_to_center() # Move o mouse para o centro da tela
 
@@ -156,9 +157,9 @@ class RPA_2:
             
         except pyautogui.ImageNotFoundException:
             logging.info("TRComputerPluginWindows não achado")
-            self.click_in_TRComputerPluginWindows()
+            self.open_dominio()
 
-    def click_in_Escrita_Fiscal(self) -> None:
+    def click_in_escrita_fiscal(self) -> None:
         try:
             self.mouse_to_center()
             
@@ -175,7 +176,7 @@ class RPA_2:
             
         except pyautogui.ImageNotFoundException:
             logging.info("Escrita Fiscal não achada")
-            self.click_in_Escrita_Fiscal()
+            self.click_in_escrita_fiscal()
     
     def login_in_dominio(self) -> None:
         try:
@@ -230,7 +231,7 @@ class RPA_2:
         except pyautogui.ImageNotFoundException:
             self.wait_to_load()
     
-    def click_in_Troca_de_Empresa(self) -> None:
+    def click_in_troca_de_empresa(self) -> None:
         try:    
             logging.info("Procurando Troca Icon de Empresa")
             icon_button = pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/TrocarEmpresaIcon.png")
@@ -242,7 +243,7 @@ class RPA_2:
         
         except pyautogui.ImageNotFoundException:
             logging.info("Troca de Empresa Icon não achado")
-            self.click_in_Troca_de_Empresa()
+            self.click_in_troca_de_empresa()
     
     def filling_the_empresa_code(self, empresa_id) -> None:
         try:
@@ -380,8 +381,8 @@ class RPA_2:
             last_mouth = 12
             today_year = today_year - 1      
         else:
-            # last_mouth = today_mouth - 1 # Correto
-            last_mouth = today_mouth - 2 # Teste
+            last_mouth = today_mouth - 1 # Correto
+            # last_mouth = today_mouth - 2 # Teste
                     
         last_day = str((monthrange(today_year, last_mouth))[1])
         last_mouth = str(last_mouth)
@@ -498,7 +499,26 @@ class RPA_2:
         pyautogui.press('enter')
         logging.info("Fechando aba de download")
     
+    def close_dominio(self) -> None:
+        logging.info('Fechando Escrita Fiscal...')
+        sleep(0.1)
+        pyautogui.hotkey('alt', 'f4')
+        sleep(0.1)
+        pyautogui.press('enter')
+        
+        sleep(1)
+        self.mouse_to_center()
+        pyautogui.click()
+        
+        logging.info('Fechando Domínio WEB...')
+        sleep(0.1)
+        pyautogui.hotkey('alt', 'f4')
+        sleep(0.1)
+        pyautogui.press('enter')
+    
     def __del__(self) -> None:
+        self.close_dominio() # Fechando Domínio
+        
         if self.driver is not None:
             self.driver.close()
             logging.info("Processo Encerrado")
