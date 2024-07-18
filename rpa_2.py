@@ -1,19 +1,25 @@
+# Biblioteca para web scraping
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+# Biblioteca para manipular o ponteiro do mouse
 import pyautogui
 
+# Bibliotecas relacionadas a tempo
 from time import sleep
 from datetime import date
 from calendar import monthrange
 
+# Manipular arquivos
 import os
 
+# Funções criadas pelo dev
 from import_xlsx import import_column_from_xlsx
 from editing_xlsx import editing_xlsx
 
+# Logging.info('')
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
