@@ -347,11 +347,19 @@ class RPA_2:
             pyautogui.moveTo(relatorios_button)
             pyautogui.click()
             
-            ordem = ["n", "f", "o"]
+            ordem = ["n", "f"]
             
             for letra in ordem:
                 logging.info(f"Tecla {letra} pressionada")
                 pyautogui.press(letra)
+            
+            sleep(1)
+            efd_button = pyautogui.locateCenterOnScreen(
+                "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/EFD_Contribuicoes.png"
+            )
+            
+            pyautogui.moveTo(efd_button)
+            pyautogui.click()
             
         except pyautogui.ImageNotFoundException:
             logging.info("Relatórios não achado")
@@ -439,7 +447,7 @@ class RPA_2:
             try:
                 sleep(0.1)
                 pyautogui.locateCenterOnScreen(
-                    "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/NoData.png"
+                    "refer_images/Dominio/Escritura/Empresa/AlertEmpresa.png"
                 )
                 logging.info("Dados não digitados")
                         
@@ -453,15 +461,14 @@ class RPA_2:
                 try:
                     sleep(0.1)
                     pyautogui.locateCenterOnScreen(
-                        "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/LastMonth.png"
+                        "refer_images/Dominio/Escritura/Empresa/QuestionEmpresa.png"
                     )
-                    logging.info("Ultimo mês digitado")
+                    logging.info("Copiando o ultimo mês digitado")
                             
                     self.mouse_to_center()
                     pyautogui.click()
                     pyautogui.press('y')
                     
-                    logging.info("Esperando Download")
                     self.wait_to_download(empresa_id)
                     
                 except pyautogui.ImageNotFoundException:
