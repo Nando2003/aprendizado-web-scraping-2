@@ -16,8 +16,8 @@ from calendar import monthrange
 import os
 
 # Funções criadas pelo dev
-from import_xlsx import import_column_from_xlsx
-from editing_xlsx import editing_xlsx
+from functions.import_xlsx import import_column_from_xlsx
+from functions.editing_xlsx import editing_xlsx
 
 # Logging.info('')
 import logging
@@ -27,9 +27,9 @@ logging.basicConfig(
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-class RPA_2:
+class DominioWeb:
     
-    def __init__(self, excel_path:str, username_web:str, password_web:str, username_local:str, password_local:str, download_path:str=None) -> None:
+    def __init__(self, download_path:list, excel_path:str, username_web:str, password_web:str, username_local:str, password_local:str) -> None:
         self.username_web = username_web
         self.password_web = password_web
         self.username_local = username_local
@@ -38,6 +38,7 @@ class RPA_2:
         self.empresas_id = self.list_of_empresas() 
         # self.empresas_id = [413, 346]
         self.download_path = download_path
+        self.new_download_path = []
         self.status = []     
         self.url = 'https://www.dominioweb.com.br/'
         self.driver = None
@@ -45,7 +46,6 @@ class RPA_2:
         self._process()
     
     def _process(self) -> None:
-        self.new_download_path() # Caso download_path não seja None, será criado um path
         self.open_browser() # Abre o navegador e entra na página da URL
         self.login_in_url() # Faz o login com email e senha
         self.open_dominio() # Clica em abrir
@@ -53,14 +53,21 @@ class RPA_2:
         self.login_in_dominio() # Insere as informações necessárias
         self.click_to_login() # Clica no botão para efetuar o login
         self.wait_to_load() # Espera a escrita fiscal carregar
-        
-        for empresa_id in self.empresas_id:
+
+        for empresa_id, empresa_path in zip(self.empresas_id, self.download_path):
+            download_path_alterado, complete_download_path= self.changing_download_path( 
+                empresa_id=empresa_id,
+                empresa_path=empresa_path
+            ) # Caso download_path não seja None, será criado um path
+            self.new_download_path.append((complete_download_path, None))
             self.click_in_troca_de_empresa() # Clica no icone de troca
             self.filling_the_empresa_code(empresa_id=empresa_id) # Preenche o campo com o código da empresa
             self.click_in_ativar() # Clica em ativar empresa
             self.open_contribuicoes() # Abre EFD contribuições
             self.typing_the_date() # Digita a data do primeiro e ultimo dia do mês passado
-            self.typing_the_download_path(empresa_id=empresa_id) # Digita o path de download
+            self.typing_the_download_path(
+                download_path_alterado=download_path_alterado
+            ) # Digita o path de download
             self.click_to_download() # Clica no botão de download
             self.wait_to_download(empresa_id=empresa_id) # Espera o download ser realizado
             self.close_download() # Fecha a aba de download
@@ -76,14 +83,17 @@ class RPA_2:
             coluna='B'
         )
     
-    def new_download_path(self) -> None:
-        if self.download_path is not None:
-            self.download_path = os.path.realpath(self.download_path)
-            if os.path.realpath(self.download_path) and self.download_path[0:2] == "C:":
-                self.download_path = "M:\\" + self.download_path[2::]
-                return
+    def changing_download_path(self, empresa_id:int, empresa_path:str) -> str:
+        empresa_path = os.path.realpath(empresa_path)
+        if empresa_path.startswith("C:\\"):
+            download_path_alterado = "M:\\" + empresa_path[3::]
+        else:
+            download_path_alterado = empresa_path
+            
+        download_path_alterado = os.path.join(download_path_alterado, f"{empresa_id}.txt")
+        complete_download_path = os.path.join(empresa_path, f"{empresa_id}.txt")
         
-        self.download_path = "M:\\Mia"
+        return download_path_alterado, complete_download_path
     
     def mouse_to_center(self) -> None:
         screen_width, screen_height = pyautogui.size()
@@ -406,16 +416,11 @@ class RPA_2:
         pyautogui.press("backspace")
         pyautogui.write(last_day_date)
     
-    def typing_the_download_path(self, empresa_id) -> None:
-        complete_download_path = os.path.join(
-            self.download_path, 
-            f"{empresa_id}.txt"
-        )
-        
+    def typing_the_download_path(self, download_path_alterado) -> None:
         sleep(0.1)
         pyautogui.press('tab', presses=2)
         pyautogui.press('backspace')
-        pyautogui.write(complete_download_path)
+        pyautogui.write(download_path_alterado)
         
     def click_to_download(self) -> None:
         sleep(0.1)
@@ -492,9 +497,22 @@ class RPA_2:
           linha=3,
           coluna='C'
         ):
-            logging.info("Excel editado")
+            logging.info("Adicionando Status ao Excel")
         else:
             logging.info("Erro ao editar o Excel")
+        
+        if editing_xlsx(
+            excel_path=self.excel_path,
+            data=self.new_download_path,
+            linha=3,
+            coluna='D'
+        ):
+            logging.info('Editando Excel')
+        else:
+            logging.info('Erro ao editar o Excel')
+    
+    def get_companies_path_txt(self) -> list:
+        return self.new_download_path
     
     def close_download(self) -> None:
         sleep(0.1)

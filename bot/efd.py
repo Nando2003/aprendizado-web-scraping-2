@@ -10,7 +10,7 @@ logging.basicConfig(
 
 class EFDContribuicoes:
     
-    def __init__(self, *contribuicoes_path:str) -> None:
+    def __init__(self, contribuicoes_path:list) -> None:
         self.contribuicoes_path = contribuicoes_path
         self._process()
         
