@@ -1,6 +1,7 @@
+from functions import editing_xlsx, import_column_from_xlsx
+from time import sleep
 import pyautogui
 import logging
-from time import sleep
 import os
 
 logging.basicConfig(
@@ -10,14 +11,16 @@ logging.basicConfig(
 
 class EFDContribuicoes:
     
-    def __init__(self, contribuicoes_path:list) -> None:
-        self.contribuicoes_path = contribuicoes_path
+    def __init__(self, excel_path:list) -> None:
+        self.excel_path = excel_path
+        self.paths_to_pdf = []
+        self.contribuicoes_path = self.import_path_from_excel
         self._process()
         
     def _process(self) -> None:
         self.open_efd()
         
-        for path in self.contribuicoes_path:
+        for path, index in self.contribuicoes_path:
             self.import_shortcut()
             self.import_file(path)
             self.close_pop_ups_download()
@@ -25,8 +28,17 @@ class EFDContribuicoes:
             self.close_escritura()
             self.delete_efd_from_db()
             self.close_pop_ups_delete()
-            
+        
+        self.editing_the_paths_in_excel()
         sleep(5)
+    
+    def import_path_from_excel(self) -> list:
+        return import_column_from_xlsx(
+            excel_path=self.excel_path,
+            linha=3,
+            coluna='D',
+            index=True
+        )
     
     def open_efd(self) -> None:
         pyautogui.press('winleft')
@@ -84,6 +96,7 @@ class EFDContribuicoes:
     def download_file(self, path:str) -> None:
         sleep(3)
         download_path = path[:-3] + ".pdf"
+        
         for i in range(7):
             pyautogui.press('tab')
             
@@ -94,6 +107,7 @@ class EFDContribuicoes:
         pyautogui.press('enter')
         
         logging.info('Baixando pdf')
+        self.paths_to_pdf.append((download_path, None))
     
     def close_escritura(self) -> None:
         sleep(1)
@@ -128,6 +142,16 @@ class EFDContribuicoes:
                 ...
         
         sleep(3)
+    
+    def editing_the_paths_in_excel(self, index) -> None:
+        for path, index_excel in zip(self.paths_to_pdf, index):
+            editing_xlsx(
+                excel_path=self.excel_path,
+                data=path,
+                linha=index_excel,
+                coluna='D'
+            )
+        # Ajeitar essa PARTE
         
     def __del__(self) -> None:
         pyautogui.hotkey(

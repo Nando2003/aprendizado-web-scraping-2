@@ -26,10 +26,8 @@ if __name__ == "__main__":
         username_local=os.environ.get("USERNAME2"),
         password_local=os.environ.get("PASSWORD2")
     )
-    
-    companies_path_txt = dominio_web.get_companies_path_txt()
         
-    """EFDContribuicoes(
-        contribuicoes_path=companies_path_txt
-    )"""
+    EFDContribuicoes(
+        excel_path=excel_path
+    )
     

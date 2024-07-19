@@ -35,11 +35,15 @@ class DominioWeb:
         self.username_local = username_local
         self.password_local = password_local
         self.excel_path = excel_path
-        self.empresas_id = self.list_of_empresas() 
-        # self.empresas_id = [413, 346]
         self.download_path = download_path
-        self.new_download_path = []
-        self.status = []     
+        self.empresas_id = self.list_of_empresas() 
+        self.status = []
+        
+        # Contador de Concluidos
+        self.index = []     
+        self.looping = 1
+        
+        # Selenium
         self.url = 'https://www.dominioweb.com.br/'
         self.driver = None
         self.wait_time = 10
@@ -59,7 +63,6 @@ class DominioWeb:
                 empresa_id=empresa_id,
                 empresa_path=empresa_path
             ) # Caso download_path não seja None, será criado um path
-            self.new_download_path.append((complete_download_path, None))
             self.click_in_troca_de_empresa() # Clica no icone de troca
             self.filling_the_empresa_code(empresa_id=empresa_id) # Preenche o campo com o código da empresa
             self.click_in_ativar() # Clica em ativar empresa
@@ -69,17 +72,20 @@ class DominioWeb:
                 download_path_alterado=download_path_alterado
             ) # Digita o path de download
             self.click_to_download() # Clica no botão de download
-            self.wait_to_download(empresa_id=empresa_id) # Espera o download ser realizado
+            self.wait_to_download(
+                empresa_id=empresa_id,
+                complete_download_path=complete_download_path
+            ) # Espera o download ser realizado
             self.close_download() # Fecha a aba de download
         
-        self.editing_excel() # Edita o excel com os status de cada empresa
-        
-        sleep(10)
+        self.adding_status_to_excel() # Edita o excel com os status de cada empresa
+        self.close_dominio()
+        sleep(3)
 
     def list_of_empresas(self) -> list:
         return import_column_from_xlsx(
             excel_path=self.excel_path,
-            linha=2, 
+            linha=3, 
             coluna='B'
         )
     
@@ -427,7 +433,7 @@ class DominioWeb:
         pyautogui.press('tab', presses=2)
         pyautogui.press('enter')
             
-    def wait_to_download(self, empresa_id) -> None:
+    def wait_to_download(self, empresa_id, complete_download_path) -> None:
         try:
             pyautogui.locateCenterOnScreen(
                     "refer_images/Dominio/Escritura/Empresa/WarningEmpresa.png"
@@ -439,24 +445,34 @@ class DominioWeb:
                 pyautogui.locateCenterOnScreen(
                     "refer_images/Dominio/Escritura/Empresa/EFD_Contribuicoes/DownloadComplete.png"
             )
-                logging.info("Download concluido")
+                logging.info(f"Download concluido: {empresa_id}")
+                
+                tuple_download_path = (complete_download_path, None)
+                list_download_path = [tuple_download_path]
+                
+                self.index = 3 + self.looping
+                self.adding_path_to_excel(
+                    list_download_path
+                )
                 
                 self.mouse_to_center()
                 pyautogui.click()
                 pyautogui.press('esc')
                 
                 self.status.append(("CONCLUIDO", "90ee90"))
+                self.looping = self.looping + 1
                 
             except pyautogui.ImageNotFoundException:
                 
-                logging.info("Download Incompleto")
-                pyautogui.screenshot(imageFilename=f"./screenshot/{empresa_id}.png")
+                logging.info(f"Download Incompleto: {empresa_id}")
+                # pyautogui.screenshot(imageFilename=f"./screenshot/{empresa_id}.png")
                     
                 self.mouse_to_center()
                 pyautogui.click()
                 pyautogui.press('esc')
                     
                 self.status.append(("FALHA", "ff6961"))
+                self.looping = self.looping + 1
                     
         except pyautogui.ImageNotFoundException:
             try:
@@ -464,13 +480,14 @@ class DominioWeb:
                 pyautogui.locateCenterOnScreen(
                     "refer_images/Dominio/Escritura/Empresa/AlertEmpresa.png"
                 )
-                logging.info("Dados não digitados")
+                logging.info(f"Dados não digitados {empresa_id}")
                         
                 self.mouse_to_center()
                 pyautogui.click()
                 pyautogui.press('esc')
                     
                 self.status.append(("FALTA DE DADOS", "ffffe0"))
+                self.looping = self.looping + 1
                 
             except pyautogui.ImageNotFoundException:
                 try:
@@ -484,13 +501,13 @@ class DominioWeb:
                     pyautogui.click()
                     pyautogui.press('y')
                     
-                    self.wait_to_download(empresa_id)
+                    self.wait_to_download(empresa_id, complete_download_path)
                     
                 except pyautogui.ImageNotFoundException:
                     logging.info("Esperando Download")
-                    self.wait_to_download(empresa_id)
-    
-    def editing_excel(self) -> None:
+                    self.wait_to_download(empresa_id, complete_download_path)
+        
+    def adding_status_to_excel(self) -> None:
         if editing_xlsx(
           excel_path=self.excel_path,
           data=self.status,
@@ -500,19 +517,17 @@ class DominioWeb:
             logging.info("Adicionando Status ao Excel")
         else:
             logging.info("Erro ao editar o Excel")
-        
+    
+    def adding_path_to_excel(self, download_path:str):
         if editing_xlsx(
             excel_path=self.excel_path,
-            data=self.new_download_path,
-            linha=3,
+            data=download_path,
+            linha=self.index,
             coluna='D'
         ):
-            logging.info('Editando Excel')
+            logging.info('Adicionando o caminho no Excel')
         else:
             logging.info('Erro ao editar o Excel')
-    
-    def get_companies_path_txt(self) -> list:
-        return self.new_download_path
     
     def close_download(self) -> None:
         sleep(0.1)
@@ -521,25 +536,21 @@ class DominioWeb:
         logging.info("Fechando aba de download")
     
     def close_dominio(self) -> None:
+        sleep(1)
         logging.info('Fechando Escrita Fiscal...')
         sleep(0.1)
         pyautogui.hotkey('alt', 'f4')
-        sleep(0.1)
+        sleep(2)
         pyautogui.press('enter')
         
-        sleep(1)
-        self.mouse_to_center()
-        pyautogui.click()
-        
+        sleep(5)
         logging.info('Fechando Domínio WEB...')
         sleep(0.1)
         pyautogui.hotkey('alt', 'f4')
-        sleep(0.1)
+        sleep(2)
         pyautogui.press('enter')
     
     def __del__(self) -> None:
-        self.close_dominio() # Fechando Domínio
-        
         if self.driver is not None:
             self.driver.close()
             logging.info("Processo Encerrado")
