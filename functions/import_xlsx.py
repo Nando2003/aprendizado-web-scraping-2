@@ -2,6 +2,15 @@ from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
 
 def import_column_from_xlsx(excel_path:str, linha:int =1, coluna:str ='A', index:bool =False) -> list:
+    """
+    Percorre uma coluna de um arquivo Excel e aloca os dados numa lista.
+    
+    :param excel_path: Caminho do arquivo Excel.
+    :param linha: Linha inicial para preenchimento (1-indexado).
+    :param coluna: Coluna para preenchimento.
+    :param index: True se o index for necessário.
+    :return: Retorna uma lista com os dados de uma coluna. index=True -> [(index, data), (index, data)...] index=False -> [data, data...]
+    """
     try:
         load_wb = load_workbook(excel_path)
         sheet = load_wb.active
