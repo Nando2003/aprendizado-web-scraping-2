@@ -51,7 +51,8 @@ class EFDContribuicoes:
                 excel_path=self.excel_path,
                 data=[path],
                 linha=index,
-                coluna='D'
+                coluna='D',
+                hyperlink=True
             )
     
     def open_efd(self) -> None:
@@ -79,14 +80,14 @@ class EFDContribuicoes:
                 pyautogui.press('enter')
                 logging.info('Arquivo importado')
             else:
-                raise ValueError(f"Erro: {self.contribuicoes_path} não é um arquivo .txt")
+                raise ValueError(f"Erro: {path} não é um arquivo .txt")
         else:
-            raise FileNotFoundError(f"Erro: {self.contribuicoes_path} não é um arquivo válido")
+            raise FileNotFoundError(f"Erro: {path} não é um arquivo válido. Verifique se ele está aberto.")
     
     def close_pop_ups_download(self) -> None:
         try:
             pyautogui.locateCenterOnScreen(
-                image='refer_images/EFD_Contribuicoes/EscrituraAssinada.png'
+                image='refer_images/EFD_Contribuicoes/ArquivoAvisos.png'
             )
             logging.info('Fechando pop-ups')
             pyautogui.press('enter', presses=2, interval=1.5)
@@ -109,7 +110,7 @@ class EFDContribuicoes:
     
     def download_file(self, path:str) -> None:
         sleep(3)
-        download_path = path[:-3] + ".pdf"
+        download_path = path[:-3] + "pdf"
         
         for i in range(7):
             pyautogui.press('tab')
@@ -157,11 +158,16 @@ class EFDContribuicoes:
         
         sleep(3)
         
-    """def __del__(self) -> None:
-        pyautogui.hotkey(
-            'alt', 'f4'
+    def __del__(self) -> None:
+        close_button = pyautogui.locateCenterOnScreen(
+            image='refer_images/EFD_Contribuicoes/CloseButton.png',
+            minSearchTime=5
         )
-        logging.info('Processo encerrado')"""
+        
+        pyautogui.moveTo(close_button)
+        pyautogui.click()
+        
+        logging.info('Processo encerrado')
 
 if __name__ in "__main__":
     EFDContribuicoes(

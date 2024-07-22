@@ -1,7 +1,7 @@
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
-def editing_xlsx(excel_path: str, data: list, linha: int = 1, coluna: str = 'A') -> bool:
+def editing_xlsx(excel_path: str, data: list, linha: int = 1, coluna: str = 'A', hyperlink:bool = False) -> bool:
     """
     Preenche uma coluna de um arquivo Excel com dados fornecidos.
     
@@ -28,8 +28,13 @@ def editing_xlsx(excel_path: str, data: list, linha: int = 1, coluna: str = 'A')
                         end_color=color,
                         fill_type='solid'
                     )
+                if hyperlink:
+                    cell.hyperlink = value
             else:
                 cell.value = item
+                if hyperlink:
+                    cell.hyperlink = item
+        
         
         load_wb.save(excel_path)
         return True

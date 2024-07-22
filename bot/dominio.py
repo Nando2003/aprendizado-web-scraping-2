@@ -249,7 +249,7 @@ class DominioWeb:
             sleep(1)
             logging.info("Escrita carregada")
             
-            sleep(5)
+            sleep(4)
             self.close_warning(time=2)
             self.close_alert(time=2)
         
@@ -258,6 +258,7 @@ class DominioWeb:
     
     def click_in_troca_de_empresa(self) -> None:
         try:    
+            sleep(4)
             logging.info("Procurando Troca Icon de Empresa")
             icon_button = pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/TrocarEmpresaIcon.png")
 
@@ -408,8 +409,8 @@ class DominioWeb:
             last_mouth = 12
             today_year = today_year - 1      
         else:
-            last_mouth = today_mouth - 1 # Correto
-            # last_mouth = today_mouth - 2 # Teste
+            # last_mouth = today_mouth - 1 # Correto
+            last_mouth = today_mouth - 2 # Teste
                     
         last_day = str((monthrange(today_year, last_mouth))[1])
         last_mouth = str(last_mouth)
