@@ -13,14 +13,14 @@ class EFDContribuicoes:
     
     def __init__(self, excel_path:list) -> None:
         self.excel_path = excel_path
-        self.paths_to_pdf = []
-        self.contribuicoes_path = self.import_path_from_excel
+        self.pdfs_path = []
+        self.index, self.txt_path = self.import_index_path_from_excel()
         self._process()
         
     def _process(self) -> None:
         self.open_efd()
         
-        for path, index in self.contribuicoes_path:
+        for path in self.txt_path:
             self.import_shortcut()
             self.import_file(path)
             self.close_pop_ups_download()
@@ -28,17 +28,31 @@ class EFDContribuicoes:
             self.close_escritura()
             self.delete_efd_from_db()
             self.close_pop_ups_delete()
-        
-        self.editing_the_paths_in_excel()
+            
+        self.editing_the_paths_in_excel(self.index, self.pdfs_path)
         sleep(5)
     
-    def import_path_from_excel(self) -> list:
-        return import_column_from_xlsx(
+    def import_index_path_from_excel(self) -> list:
+        index_data = import_column_from_xlsx(
             excel_path=self.excel_path,
             linha=3,
             coluna='D',
             index=True
         )
+        return self.split_index_and_data(index_data)
+        
+    def split_index_and_data(self, index_data:list) -> list:
+        index, data_value = zip(*[(index, value) for index, value in index_data])
+        return list(index), list(data_value)
+
+    def editing_the_paths_in_excel(self, index_list:list, pdfs_path:list) -> None:
+        for index, path in zip(index_list, pdfs_path):
+            editing_xlsx(
+                excel_path=self.excel_path,
+                data=[path],
+                linha=index,
+                coluna='D'
+            )
     
     def open_efd(self) -> None:
         pyautogui.press('winleft')
@@ -107,7 +121,7 @@ class EFDContribuicoes:
         pyautogui.press('enter')
         
         logging.info('Baixando pdf')
-        self.paths_to_pdf.append((download_path, None))
+        self.pdfs_path.append(download_path)
     
     def close_escritura(self) -> None:
         sleep(1)
@@ -142,22 +156,12 @@ class EFDContribuicoes:
                 ...
         
         sleep(3)
-    
-    def editing_the_paths_in_excel(self, index) -> None:
-        for path, index_excel in zip(self.paths_to_pdf, index):
-            editing_xlsx(
-                excel_path=self.excel_path,
-                data=path,
-                linha=index_excel,
-                coluna='D'
-            )
-        # Ajeitar essa PARTE
         
-    def __del__(self) -> None:
+    """def __del__(self) -> None:
         pyautogui.hotkey(
             'alt', 'f4'
         )
-        logging.info('Processo encerrado')
+        logging.info('Processo encerrado')"""
 
 if __name__ in "__main__":
     EFDContribuicoes(

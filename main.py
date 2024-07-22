@@ -26,8 +26,7 @@ if __name__ == "__main__":
         username_local=os.environ.get("USERNAME2"),
         password_local=os.environ.get("PASSWORD2")
     )
-        
+
     EFDContribuicoes(
         excel_path=excel_path
     )
-    

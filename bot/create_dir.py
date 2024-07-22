@@ -58,7 +58,7 @@ class CreateDir:
     def import_name_of_the_company(self) -> list:
         return import_column_from_xlsx(
             excel_path=self.excel_path,
-            linha=2, 
+            linha=3, 
             coluna='A'
         )
     

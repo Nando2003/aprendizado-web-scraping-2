@@ -41,7 +41,7 @@ class DominioWeb:
         
         # Contador de Concluidos
         self.index = []     
-        self.looping = 1
+        self.looping = 0
         
         # Selenium
         self.url = 'https://www.dominioweb.com.br/'
@@ -162,7 +162,7 @@ class DominioWeb:
         try:
             self.mouse_to_center() # Move o mouse para o centro da tela
 
-            logging.info("Procurando TRComputerPluginWindows")
+            
             
             abrir_button = pyautogui.locateCenterOnScreen(
                 "refer_images/Browser/TRComputerPluginWindows.png"
@@ -175,6 +175,7 @@ class DominioWeb:
             pyautogui.click()
             
         except pyautogui.ImageNotFoundException:
+            logging.info("Procurando TRComputerPluginWindows")
             logging.info("TRComputerPluginWindows não achado")
             self.open_dominio()
 
@@ -230,6 +231,11 @@ class DominioWeb:
             logging.info("OK para login achado")
             pyautogui.moveTo(ok_button)
             pyautogui.click()
+            
+            sleep(6)
+            self.mouse_to_center()
+            pyautogui.click()
+            pyautogui.press('esc')
         
         except pyautogui.ImageNotFoundException:
             logging.info("OK para login não achado")
@@ -244,8 +250,8 @@ class DominioWeb:
             logging.info("Escrita carregada")
             
             sleep(5)
-            self.close_warning()
-            self.close_alert()
+            self.close_warning(time=2)
+            self.close_alert(time=2)
         
         except pyautogui.ImageNotFoundException:
             self.wait_to_load()
@@ -289,16 +295,16 @@ class DominioWeb:
             pyautogui.click()
             
             sleep(5)
-            self.close_warning()
-            self.close_alert()
+            self.close_warning(time=2)
+            self.close_alert(time=2)
         
         except pyautogui.ImageNotFoundException:
             logging.info("Ativar troca de empresas não achado")
             self.click_in_ativar()
     
-    def close_warning(self, i=0) -> None:
+    def close_warning(self, i=0, time=5) -> None:
         try:
-            while(i<=2):
+            while(i<=(time-1)):
                 sleep(1)
                 logging.info(f"Procurando Warning {i+1}")
                 pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/WarningEmpresa.png")
@@ -309,7 +315,7 @@ class DominioWeb:
                 pyautogui.press('esc')
                 
                 sleep(0.1)
-                self.close_question()
+                self.close_question(time=2)
                 break
             
             else:
@@ -317,14 +323,16 @@ class DominioWeb:
                 
         except pyautogui.ImageNotFoundException:
             i = i + 1
-            self.close_warning(i)
+            self.close_warning(i, time)
     
-    def close_alert(self, i=0) -> None:
+    def close_alert(self, i=0, time=5) -> None:
         try:
-            while(i<=1):
+            while(i<=(time-1)):
                 sleep(1)
                 logging.info(f"Procurando Alert {i+1}")
-                pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/AlertEmpresa.png")
+                pyautogui.locateCenterOnScreen(
+                    image="refer_images/Dominio/Escritura/Empresa/AlertEmpresa.png"
+                )
                 self.mouse_to_center()
                 
                 logging.info("Alert encontrado")
@@ -337,11 +345,11 @@ class DominioWeb:
             
         except pyautogui.ImageNotFoundException:
             i = i + 1
-            self.close_alert(i)
+            self.close_alert(i, time)
     
-    def close_question(self, i=0) -> None:
+    def close_question(self, i=0, time=5) -> None:
         try:
-            while(i<=2):
+            while(i<=(time-1)):
                 sleep(1)
                 logging.info(f"Procurando Question {i+1}")
                 pyautogui.locateCenterOnScreen("refer_images/Dominio/Escritura/Empresa/QuestionEmpresa.png")
@@ -358,7 +366,7 @@ class DominioWeb:
             
         except pyautogui.ImageNotFoundException:
             i = i + 1
-            self.close_question(i)
+            self.close_question(i, time)
       
     def open_contribuicoes(self) -> None:
         try:
@@ -508,17 +516,20 @@ class DominioWeb:
                     self.wait_to_download(empresa_id, complete_download_path)
         
     def adding_status_to_excel(self) -> None:
-        if editing_xlsx(
+        result = editing_xlsx(
           excel_path=self.excel_path,
           data=self.status,
           linha=3,
           coluna='C'
-        ):
+        )
+        
+        if result:
             logging.info("Adicionando Status ao Excel")
         else:
             logging.info("Erro ao editar o Excel")
     
     def adding_path_to_excel(self, download_path:str):
+        print(self.index)
         if editing_xlsx(
             excel_path=self.excel_path,
             data=download_path,
@@ -536,18 +547,18 @@ class DominioWeb:
         logging.info("Fechando aba de download")
     
     def close_dominio(self) -> None:
-        sleep(1)
+        sleep(5)
         logging.info('Fechando Escrita Fiscal...')
-        sleep(0.1)
+        sleep(1)
         pyautogui.hotkey('alt', 'f4')
-        sleep(2)
+        sleep(4)
         pyautogui.press('enter')
         
         sleep(5)
         logging.info('Fechando Domínio WEB...')
-        sleep(0.1)
+        sleep(1)
         pyautogui.hotkey('alt', 'f4')
-        sleep(2)
+        sleep(4)
         pyautogui.press('enter')
     
     def __del__(self) -> None:
