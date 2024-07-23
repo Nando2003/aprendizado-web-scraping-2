@@ -24,7 +24,7 @@ $ source venv/Scripts/activate
 
 Após a ativação do *venv*, você perceberá que todos os comandos que rodados dentro desse *bash* terá no final um ```(venv)```. Isso quer dizer que você ativou o *venv* com sucesso.
 
-Segundamente, instale as dependências que estarão dentro do *requirements.txt*:
+Segundamente, instale as dependências que estarão dentro do [*requirements.txt*](https://github.com/fernandoluiz2003/rpa_2/blob/main/requirements.txt):
 
 ```bash
 $ pip install -r requirements.txt
@@ -32,7 +32,7 @@ $ pip install -r requirements.txt
 
 # Como rodar o *BOT* ?
 
-Antes de começarmos os trabalhos, devemos fazer algo muito importante: criar um arquivo *.env* que deverá seguir o exemplo que está em *.env_example*.
+Antes de começarmos os trabalhos, devemos fazer algo muito importante: criar um arquivo *.env* que deverá seguir o exemplo que está em [*.env_example*](https://github.com/fernandoluiz2003/rpa_2/blob/main/dotenv_files/.env_example).
 
 ---
 
@@ -65,7 +65,7 @@ Nesse projeto de *web scraping*, as tecnologias usadas para que todo o processo 
 
 - ***Openpyxl***: Especialmente, feita para mexer em arquivos <span style="color:#800080">*.xlsx*</span>. Ela foi indispensavel para disponibilizar para o usuário uma resposta visual de onde os arquivos foram baixados e os status das empresas no sistema.
 
-- ***Dotenv***: Por último e não menos especial, a biblioteca que permite a criação de variáveis de ambiente (geralmente, são informações importantes e confidencias). Ela permite que o arquivo *.env* seja carregado e possamos usar as variáveis em nosso código. Como podemos ver no <span style="color:#800080">*main.py*</span> :
+- ***Dotenv***: Por último e não menos especial, a biblioteca que permite a criação de variáveis de ambiente (geralmente, são informações importantes e confidencias). Ela permite que o arquivo *.env* seja carregado e possamos usar as variáveis em nosso código. Como podemos ver no [*main.py*](https://github.com/fernandoluiz2003/rpa_2/blob/main/main.py) :
 ```python
 # Imports...
 
@@ -89,5 +89,3 @@ if __name__ == "__main__":
 
     # Código...
 ```
-
----
