@@ -42,9 +42,9 @@ Antes de começarmos os trabalhos, devemos fazer algo muito importante: criar um
 
 ---
 
-- <span style="color:#dd7538">USERNAME1</span> = Usuário do ***Domínio WEB*** no ***App***
+- <span style="color:#dd7538">USERNAME2</span> = Usuário do ***Domínio WEB*** no ***App***
 
-- <span style="color:#dd7538">PASSWORD1</span> = Senha do ***Domínio WEB*** no ***App***
+- <span style="color:#dd7538">PASSWORD2</span> = Senha do ***Domínio WEB*** no ***App***
 
 ---
 
