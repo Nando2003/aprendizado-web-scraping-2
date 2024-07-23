@@ -53,3 +53,40 @@ Finalizando, o que foi pedido acima, agora é só rodar dentro do *bash* em que 
 ```bash
 $ python main.py
 ```
+
+# Tecnologias Usadas:
+
+Nesse projeto de *web scraping*, as tecnologias usadas para que todo o processo fosse realizado foram:
+
+- ***Selenium***: Usado bastante para testes automatizados, nesse projeto foi usado como um facilitador para que o ***Domínio WEB*** pudesse ser aberto.
+
+- ***Pyautogui***: Biblioteca famosa no ramo das automações em *Python*. Ela foi usada especialmente para identificar imagens fora do navegador e automatizar processos a partir delas.
+
+- ***Openpyxl***: Especialmente, feita para mexer em arquivos <span style="color:#800080">*.xlsx*</span>. Ela foi indispensavel para disponibilizar para o usuário uma resposta visual de onde os arquivos foram baixados e os status das empresas no sistema.
+
+- ***Dotenv***: Por último e não menos especial, a biblioteca que permite a criação de variáveis de ambiente (geralmente, são informações importantes e confidencias). Ela permite que o arquivo *.env* seja carregado e possamos usar as variáveis em nosso código. Como podemos ver no <span style="color:#800080">*main.py*</span> :
+```python
+# Imports...
+
+if __name__ == "__main__":
+    """
+    Pega o diretorio que este arquivo se encontra + dotenv_files/.env
+    """
+    dotenv_path = os.path.join(os.path.dirname(__file__), "dotenv_files/.env") 
+    load_dotenv(dotenv_path)
+    
+    # Código...
+    
+    dominio_web = DominioWeb(
+        download_path=companies_path,
+        excel_path=excel_path,
+        username_web=os.environ.get("USERNAME1"),
+        password_web=os.environ.get("PASSWORD1"),
+        username_local=os.environ.get("USERNAME2"),
+        password_local=os.environ.get("PASSWORD2")
+    )
+
+    # Código...
+```
+
+---

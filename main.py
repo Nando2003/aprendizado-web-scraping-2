@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 
 if __name__ == "__main__":
-    # Pega o diretorio que este arquivo se encontra + dotenv/.env
+    # Pega o diretorio que este arquivo se encontra + dotenv_files/.env
     dotenv_path = os.path.join(os.path.dirname(__file__), "dotenv_files/.env") 
     load_dotenv(dotenv_path)
     
